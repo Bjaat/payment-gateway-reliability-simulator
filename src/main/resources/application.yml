@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: payment-gateway-reliability-simulator
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
+
+payments:
+  retry:
+    max-attempts: ${PAYMENTS_RETRY_MAX_ATTEMPTS:3}
+    backoff-ms: ${PAYMENTS_RETRY_BACKOFF_MS:200}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  structured:
+    format:
+      console: ecs

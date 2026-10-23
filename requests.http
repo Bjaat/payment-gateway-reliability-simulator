@@ -1,0 +1,57 @@
+### Success
+POST http://localhost:8080/api/v1/payments
+Content-Type: application/json
+Idempotency-Key: demo-success-001
+
+{"merchantId":"merchant_1","amountMinor":2500,"currency":"INR","paymentMethodToken":"tok_success"}
+
+### Same key + same body -> 200 with Idempotent-Replayed: true, same payment id
+POST http://localhost:8080/api/v1/payments
+Content-Type: application/json
+Idempotency-Key: demo-success-001
+
+{"merchantId":"merchant_1","amountMinor":2500,"currency":"INR","paymentMethodToken":"tok_success"}
+
+### Same key + different body -> 422
+POST http://localhost:8080/api/v1/payments
+Content-Type: application/json
+Idempotency-Key: demo-success-001
+
+{"merchantId":"merchant_1","amountMinor":9999,"currency":"INR","paymentMethodToken":"tok_success"}
+
+### Transient failure then success (2 attempts)
+POST http://localhost:8080/api/v1/payments
+Content-Type: application/json
+Idempotency-Key: demo-flaky-001
+
+{"merchantId":"merchant_1","amountMinor":1200,"currency":"USD","paymentMethodToken":"tok_flaky_once"}
+
+### Retries exhausted -> FAILED / RETRIES_EXHAUSTED (3 attempts)
+POST http://localhost:8080/api/v1/payments
+Content-Type: application/json
+Idempotency-Key: demo-timeout-001
+
+{"merchantId":"merchant_1","amountMinor":1200,"currency":"USD","paymentMethodToken":"tok_timeout"}
+
+### Permanent decline -> DECLINED (1 attempt, no retry)
+POST http://localhost:8080/api/v1/payments
+Content-Type: application/json
+Idempotency-Key: demo-decline-001
+
+{"merchantId":"merchant_1","amountMinor":800,"currency":"EUR","paymentMethodToken":"tok_decline"}
+
+### Invalid: card-number-like token is rejected -> 400
+POST http://localhost:8080/api/v1/payments
+Content-Type: application/json
+Idempotency-Key: demo-invalid-001
+
+{"merchantId":"merchant_1","amountMinor":800,"currency":"EUR","paymentMethodToken":"4111111111111111"}
+
+### Retrieve (replace the id)
+GET http://localhost:8080/api/v1/payments/{{paymentId}}
+
+### Attempt history (replace the id)
+GET http://localhost:8080/api/v1/payments/{{paymentId}}/attempts
+
+### Health
+GET http://localhost:8080/actuator/health
